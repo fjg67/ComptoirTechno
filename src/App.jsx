@@ -78,11 +78,16 @@ function App() {
       setError(null);
       setSuccess(null);
 
+      let finalMatricule = matricule.trim().toUpperCase();
+      if (!finalMatricule.startsWith('T0')) {
+        finalMatricule = 'T0' + finalMatricule;
+      }
+
       const { data, error } = await supabase
         .from('interventions')
         .insert([
           {
-            matricule: matricule.trim(),
+            matricule: finalMatricule,
             type_probleme: typeProbleme,
             solution: solution.trim(),
           }
@@ -171,7 +176,7 @@ function App() {
                     value={matricule}
                     onChange={(e) => setMatricule(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ca-teal focus:border-ca-teal sm:text-sm transition-shadow outline-none"
-                    placeholder="Ex: 123456"
+                    placeholder="Ex: T012345"
                     required
                   />
                 </div>
