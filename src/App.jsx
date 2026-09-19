@@ -13,8 +13,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Laptop
+  Laptop,
+  BarChart2,
+  ListTodo
 } from 'lucide-react';
+import StatisticsDashboard from './components/StatisticsDashboard';
 
 const problemTypes = [
   { id: 'Logiciels', label: 'Problème de Logiciels', icon: TerminalSquare },
@@ -25,6 +28,7 @@ const problemTypes = [
 ];
 
 function App() {
+  const [activeTab, setActiveTab] = useState('historique');
   const [interventions, setInterventions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -135,9 +139,40 @@ function App() {
         </div>
       </header>
 
+      {/* Navigation des onglets */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('historique')}
+              className={`${
+                activeTab === 'historique'
+                  ? 'border-ca-teal text-ca-tealDark'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+            >
+              <ListTodo size={18} />
+              Saisie & Historique
+            </button>
+            <button
+              onClick={() => setActiveTab('statistiques')}
+              className={`${
+                activeTab === 'statistiques'
+                  ? 'border-ca-teal text-ca-tealDark'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+            >
+              <BarChart2 size={18} />
+              Statistiques
+            </button>
+          </nav>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        {activeTab === 'historique' ? (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start animate-in fade-in duration-300">
           
           {/* Section A: Formulaire de saisie */}
           <div className="md:col-span-5 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -341,8 +376,12 @@ function App() {
               )}
             </div>
           </div>
-
         </div>
+        ) : (
+          <div className="animate-in fade-in duration-300">
+            <StatisticsDashboard />
+          </div>
+        )}
       </main>
     </div>
   );
