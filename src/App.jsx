@@ -1,0 +1,346 @@
+import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
+import { startOfDay, format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { 
+  MonitorSmartphone, 
+  Keyboard, 
+  Mouse, 
+  TerminalSquare, 
+  HelpCircle,
+  Clock,
+  User,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Laptop
+} from 'lucide-react';
+
+const problemTypes = [
+  { id: 'Logiciels', label: 'Problème de Logiciels', icon: TerminalSquare },
+  { id: 'Clavier', label: 'Clavier', icon: Keyboard },
+  { id: 'Souris', label: 'Souris', icon: Mouse },
+  { id: 'PC (Matériel/Système)', label: 'PC (Matériel/Système)', icon: Laptop },
+  { id: 'Autre', label: 'Autre', icon: HelpCircle },
+];
+
+function App() {
+  const [interventions, setInterventions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  // Form state
+  const [matricule, setMatricule] = useState('');
+  const [typeProbleme, setTypeProbleme] = useState('');
+  const [solution, setSolution] = useState('');
+
+  useEffect(() => {
+    fetchInterventions();
+  }, []);
+
+  const fetchInterventions = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('interventions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+      setInterventions(data || []);
+    } catch (err) {
+      console.error('Erreur lors de la récupération:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const groupedInterventions = interventions.reduce((acc, curr) => {
+    const date = format(new Date(curr.created_at), 'yyyy-MM-dd');
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(curr);
+    return acc;
+  }, {});
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!matricule || !typeProbleme || !solution) {
+      setError('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+      setSuccess(null);
+
+      const { data, error } = await supabase
+        .from('interventions')
+        .insert([
+          {
+            matricule: matricule.trim(),
+            type_probleme: typeProbleme,
+            solution: solution.trim(),
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      setSuccess('Intervention enregistrée avec succès.');
+      setMatricule('');
+      setTypeProbleme('');
+      setSolution('');
+      
+      // Update the list locally to avoid a new fetch, or just re-fetch
+      if (data && data.length > 0) {
+        setInterventions([data[0], ...interventions]);
+      } else {
+        fetchInterventions();
+      }
+
+      // Hide success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Erreur lors de la soumission:', err);
+      setError('Une erreur est survenue lors de l\'enregistrement.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-ca-light font-sans text-ca-dark flex flex-col">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-ca-teal p-2 rounded-xl text-white">
+              <MonitorSmartphone size={24} />
+            </div>
+            <h1 className="text-xl font-bold text-ca-tealDark">Comptoir Techno</h1>
+          </div>
+          <div className="text-sm font-medium text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
+            {format(new Date(), 'EEEE d MMMM yyyy', { locale: fr })}
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          
+          {/* Section A: Formulaire de saisie */}
+          <div className="md:col-span-5 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="text-lg font-semibold text-gray-800">Nouvelle intervention</h2>
+              <p className="text-sm text-gray-500 mt-1">Enregistrez le passage d'un collaborateur.</p>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              {/* Messages de retour */}
+              {error && (
+                <div className="bg-red-50 text-red-700 p-4 rounded-xl flex items-start gap-3 text-sm">
+                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p>{error}</p>
+                </div>
+              )}
+              {success && (
+                <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl flex items-start gap-3 text-sm">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p>{success}</p>
+                </div>
+              )}
+
+              {/* Matricule */}
+              <div>
+                <label htmlFor="matricule" className="block text-sm font-medium text-gray-700 mb-2">
+                  Matricule du collaborateur <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    id="matricule"
+                    value={matricule}
+                    onChange={(e) => setMatricule(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ca-teal focus:border-ca-teal sm:text-sm transition-shadow outline-none"
+                    placeholder="Ex: 123456"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Type de problème */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Type de problème <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-3">
+                  {problemTypes.map((type) => {
+                    const Icon = type.icon;
+                    const isSelected = typeProbleme === type.id;
+                    return (
+                      <label
+                        key={type.id}
+                        className={`flex items-center p-3 border rounded-xl cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'border-ca-teal bg-ca-teal/5 ring-1 ring-ca-teal' 
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="typeProbleme"
+                          value={type.id}
+                          checked={isSelected}
+                          onChange={(e) => setTypeProbleme(e.target.value)}
+                          className="sr-only"
+                          required
+                        />
+                        <Icon className={`w-5 h-5 mr-3 ${isSelected ? 'text-ca-teal' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-medium ${isSelected ? 'text-ca-tealDark' : 'text-gray-700'}`}>
+                          {type.label}
+                        </span>
+                        <div className={`ml-auto w-4 h-4 rounded-full border flex items-center justify-center ${
+                          isSelected ? 'border-ca-teal' : 'border-gray-300'
+                        }`}>
+                          {isSelected && <div className="w-2 h-2 bg-ca-teal rounded-full" />}
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Solution */}
+              <div>
+                <label htmlFor="solution" className="block text-sm font-medium text-gray-700 mb-2">
+                  Solution apportée <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="solution"
+                  rows={4}
+                  value={solution}
+                  onChange={(e) => setSolution(e.target.value)}
+                  className="block w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ca-teal focus:border-ca-teal sm:text-sm transition-shadow outline-none resize-none"
+                  placeholder="Détaillez l'action menée..."
+                  required
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-ca-teal hover:bg-ca-tealDark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ca-teal transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  'Enregistrer l\'intervention'
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Section B: Historique */}
+          <div className="md:col-span-7 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full min-h-[500px]">
+            <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">Historique des interventions</h2>
+                <p className="text-sm text-gray-500 mt-1">Derniers passages au comptoir.</p>
+              </div>
+              <div className="bg-ca-teal/10 text-ca-tealDark px-3 py-1 rounded-full text-sm font-bold">
+                {interventions.length}
+              </div>
+            </div>
+
+            <div className="flex-1 p-6 bg-gray-50/30 overflow-y-auto">
+              {loading ? (
+                <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-ca-teal" />
+                  <p className="text-sm">Chargement de l'historique...</p>
+                </div>
+              ) : interventions.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-gray-400 space-y-4 py-12">
+                  <div className="bg-white p-4 rounded-full shadow-sm">
+                    <Clock className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <p className="text-sm text-center">Aucun passage au comptoir pour le moment.</p>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {Object.entries(groupedInterventions).map(([date, items]) => {
+                    const dateObj = new Date(date);
+                    const isToday = format(new Date(), 'yyyy-MM-dd') === date;
+                    const dateLabel = isToday 
+                      ? "Aujourd'hui" 
+                      : format(dateObj, 'EEEE d MMMM', { locale: fr });
+
+                    return (
+                      <div key={date}>
+                        <div className="sticky top-0 z-10 flex items-center gap-3 mb-4 bg-gray-50/90 backdrop-blur-sm py-2">
+                          <h3 className="text-sm font-bold text-gray-700 capitalize">{dateLabel}</h3>
+                          <div className="h-px flex-1 bg-gray-200"></div>
+                        </div>
+                        <div className="space-y-4">
+                          {items.map((intervention) => {
+                            const typeInfo = problemTypes.find(t => t.id === intervention.type_probleme) || problemTypes[4];
+                            const Icon = typeInfo.icon;
+                            
+                            return (
+                              <div key={intervention.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center gap-3">
+                                    <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
+                                      <Icon size={20} />
+                                    </div>
+                                    <div>
+                                      <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 mb-1">
+                                        {intervention.type_probleme}
+                                      </span>
+                                      <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                                        <User size={14} />
+                                        {intervention.matricule}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs font-medium text-gray-400 flex items-center gap-1.5 bg-gray-50 px-2.5 py-1 rounded-full">
+                                    <Clock size={12} />
+                                    {format(new Date(intervention.created_at), 'HH:mm')}
+                                  </div>
+                                </div>
+                                <div className="pl-12">
+                                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
+                                    {intervention.solution}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default App;

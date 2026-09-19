@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ca-teal: #007765;
+  --color-ca-tealDark: #005c4e;
+  --color-ca-light: #F3F4F6;
+  --color-ca-dark: #1F2937;
+  
+  --font-sans: "Montserrat", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-ca-light text-ca-dark font-sans antialiased;
+  }
+}
