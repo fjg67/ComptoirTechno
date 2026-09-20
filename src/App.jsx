@@ -39,7 +39,7 @@ function App() {
 
   // Form state
   const [matricule, setMatricule] = useState('');
-  const [typeProbleme, setTypeProbleme] = useState('');
+  const [typeProbleme, setTypeProbleme] = useState([]);
   const [solution, setSolution] = useState('');
 
   useEffect(() => {
@@ -74,7 +74,7 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!matricule || !typeProbleme || !solution) {
+    if (!matricule || typeProbleme.length === 0 || !solution) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -94,7 +94,7 @@ function App() {
         .insert([
           {
             matricule: finalMatricule,
-            type_probleme: typeProbleme,
+            type_probleme: typeProbleme.join(', '),
             solution: solution.trim(),
           }
         ])
@@ -104,7 +104,7 @@ function App() {
 
       setSuccess('Intervention enregistrée avec succès.');
       setMatricule('');
-      setTypeProbleme('');
+      setTypeProbleme([]);
       setSolution('');
       
       // Update the list locally to avoid a new fetch, or just re-fetch
@@ -227,7 +227,7 @@ function App() {
                 <div className="space-y-3">
                   {problemTypes.map((type) => {
                     const Icon = type.icon;
-                    const isSelected = typeProbleme === type.id;
+                    const isSelected = typeProbleme.includes(type.id);
                     return (
                       <label
                         key={type.id}
@@ -238,13 +238,16 @@ function App() {
                         }`}
                       >
                         <input
-                          type="radio"
+                          type="checkbox"
                           name="typeProbleme"
                           value={type.id}
                           checked={isSelected}
-                          onChange={(e) => setTypeProbleme(e.target.value)}
+                          onChange={() => {
+                            setTypeProbleme(prev => 
+                              prev.includes(type.id) ? prev.filter(t => t !== type.id) : [...prev, type.id]
+                            );
+                          }}
                           className="sr-only"
-                          required
                         />
                         <Icon className={`w-5 h-5 mr-3 ${isSelected ? 'text-ca-teal' : 'text-gray-400'}`} />
                         <span className={`text-sm font-medium ${isSelected ? 'text-ca-tealDark' : 'text-gray-700'}`}>
@@ -337,20 +340,25 @@ function App() {
                         </div>
                         <div className="space-y-4">
                           {items.map((intervention) => {
-                            const typeInfo = problemTypes.find(t => t.id === intervention.type_probleme) || problemTypes[4];
-                            const Icon = typeInfo.icon;
+                            const types = intervention.type_probleme ? intervention.type_probleme.split(',').map(t => t.trim()) : ['Autre'];
+                            const mainTypeInfo = problemTypes.find(t => t.id === types[0]) || problemTypes.find(t => t.id === 'Autre');
+                            const MainIcon = mainTypeInfo.icon;
                             
                             return (
                               <div key={intervention.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex items-center gap-3">
                                     <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
-                                      <Icon size={20} />
+                                      <MainIcon size={20} />
                                     </div>
                                     <div>
-                                      <span className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 mb-1">
-                                        {intervention.type_probleme}
-                                      </span>
+                                      <div className="flex flex-wrap gap-1 mb-1">
+                                        {types.map(t => (
+                                          <span key={t} className="inline-block px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                            {t}
+                                          </span>
+                                        ))}
+                                      </div>
                                       <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
                                         <User size={14} />
                                         {intervention.matricule}

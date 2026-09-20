@@ -51,7 +51,10 @@ export default function StatisticsDashboard() {
       
       // Grouper par type de problème
       const counts = interventions.reduce((acc, curr) => {
-        acc[curr.type_probleme] = (acc[curr.type_probleme] || 0) + 1;
+        const types = curr.type_probleme ? curr.type_probleme.split(',').map(t => t.trim()) : ['Autre'];
+        types.forEach(type => {
+          acc[type] = (acc[type] || 0) + 1;
+        });
         return acc;
       }, {});
 
