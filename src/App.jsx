@@ -15,7 +15,8 @@ import {
   Loader2,
   Laptop,
   BarChart2,
-  ListTodo
+  ListTodo,
+  Headset
 } from 'lucide-react';
 import StatisticsDashboard from './components/StatisticsDashboard';
 
@@ -23,6 +24,7 @@ const problemTypes = [
   { id: 'Logiciels', label: 'Problème de Logiciels', icon: TerminalSquare },
   { id: 'Clavier', label: 'Clavier', icon: Keyboard },
   { id: 'Souris', label: 'Souris', icon: Mouse },
+  { id: 'Casque', label: 'Casque / Audio', icon: Headset },
   { id: 'PC (Matériel/Système)', label: 'PC (Matériel/Système)', icon: Laptop },
   { id: 'Autre', label: 'Autre', icon: HelpCircle },
 ];
