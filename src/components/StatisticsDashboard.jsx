@@ -13,7 +13,9 @@ export default function StatisticsDashboard() {
   
   // Générer la liste des 12 derniers mois pour le sélecteur
   const monthsOptions = useMemo(() => {
-    const options = [];
+    const options = [
+      { value: 'all', label: 'Toutes les périodes' }
+    ];
     for (let i = 0; i < 12; i++) {
       const d = subMonths(new Date(), i);
       options.push({
@@ -34,18 +36,20 @@ export default function StatisticsDashboard() {
     try {
       setLoading(true);
       
-      const year = parseInt(selectedMonth.split('-')[0], 10);
-      const month = parseInt(selectedMonth.split('-')[1], 10) - 1; // JS months are 0-indexed
-      
-      const date = new Date(year, month, 1);
-      const start = startOfMonth(date).toISOString();
-      const end = endOfMonth(date).toISOString();
+      let query = supabase.from('interventions').select('type_probleme');
 
-      const { data: interventions, error } = await supabase
-        .from('interventions')
-        .select('type_probleme')
-        .gte('created_at', start)
-        .lte('created_at', end);
+      if (selectedMonth !== 'all') {
+        const year = parseInt(selectedMonth.split('-')[0], 10);
+        const month = parseInt(selectedMonth.split('-')[1], 10) - 1; // JS months are 0-indexed
+        
+        const date = new Date(year, month, 1);
+        const start = startOfMonth(date).toISOString();
+        const end = endOfMonth(date).toISOString();
+
+        query = query.gte('created_at', start).lte('created_at', end);
+      }
+
+      const { data: interventions, error } = await query;
 
       if (error) throw error;
       
