@@ -41,6 +41,7 @@ function App() {
   // Form state
   const [matricule, setMatricule] = useState('');
   const [typeProbleme, setTypeProbleme] = useState([]);
+  const [descriptionProbleme, setDescriptionProbleme] = useState('');
   const [solution, setSolution] = useState('');
 
   useEffect(() => {
@@ -75,7 +76,7 @@ function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!matricule || typeProbleme.length === 0 || !solution) {
+    if (!matricule || typeProbleme.length === 0 || !solution || !descriptionProbleme.trim()) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -96,6 +97,7 @@ function App() {
           {
             matricule: finalMatricule,
             type_probleme: typeProbleme.join(', '),
+            description: descriptionProbleme.trim(),
             solution: solution.trim(),
           }
         ])
@@ -106,6 +108,7 @@ function App() {
       setSuccess('Intervention enregistrée avec succès.');
       setMatricule('');
       setTypeProbleme([]);
+      setDescriptionProbleme('');
       setSolution('');
       
       // Update the list locally to avoid a new fetch, or just re-fetch
@@ -265,6 +268,23 @@ function App() {
                 </div>
               </div>
 
+              {typeProbleme.length > 0 && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label htmlFor="descriptionProbleme" className="block text-sm font-medium text-gray-700 mb-2">
+                    Description détaillée du problème <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="descriptionProbleme"
+                    rows={3}
+                    value={descriptionProbleme}
+                    onChange={(e) => setDescriptionProbleme(e.target.value)}
+                    className="block w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ca-teal focus:border-ca-teal sm:text-sm transition-shadow outline-none resize-none"
+                    placeholder="Précisez la nature exacte du problème rencontré..."
+                    required
+                  />
+                </div>
+              )}
+
               {/* Solution */}
               <div>
                 <label htmlFor="solution" className="block text-sm font-medium text-gray-700 mb-2">
@@ -371,10 +391,21 @@ function App() {
                                     {format(new Date(intervention.created_at), 'HH:mm')}
                                   </div>
                                 </div>
-                                <div className="pl-12">
-                                  <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
-                                    {intervention.solution}
-                                  </p>
+                                <div className="pl-12 space-y-3">
+                                  {intervention.description && (
+                                    <div>
+                                      <span className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Description</span>
+                                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed mt-1">
+                                        {intervention.description}
+                                      </p>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <span className="text-xs font-bold text-ca-teal/60 uppercase tracking-wider ml-1">Solution apportée</span>
+                                    <p className="text-sm text-gray-800 bg-ca-teal/5 p-3 rounded-xl border border-ca-teal/10 leading-relaxed mt-1">
+                                      {intervention.solution}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             );
