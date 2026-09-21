@@ -16,7 +16,8 @@ import {
   Laptop,
   BarChart2,
   ListTodo,
-  Headset
+  Headset,
+  Check
 } from 'lucide-react';
 import StatisticsDashboard from './components/StatisticsDashboard';
 
@@ -222,7 +223,7 @@ function App() {
               {/* Type de problème */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Type de problème <span className="text-red-500">*</span>
+                  Type de problème <span className="font-normal text-gray-500">(plusieurs choix possibles)</span> <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-3">
                   {problemTypes.map((type) => {
@@ -253,10 +254,10 @@ function App() {
                         <span className={`text-sm font-medium ${isSelected ? 'text-ca-tealDark' : 'text-gray-700'}`}>
                           {type.label}
                         </span>
-                        <div className={`ml-auto w-4 h-4 rounded-full border flex items-center justify-center ${
-                          isSelected ? 'border-ca-teal' : 'border-gray-300'
+                        <div className={`ml-auto w-4 h-4 rounded-sm border flex items-center justify-center transition-colors ${
+                          isSelected ? 'border-ca-teal bg-ca-teal' : 'border-gray-300 bg-white'
                         }`}>
-                          {isSelected && <div className="w-2 h-2 bg-ca-teal rounded-full" />}
+                          {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
                         </div>
                       </label>
                     );
