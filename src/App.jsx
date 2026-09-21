@@ -17,7 +17,8 @@ import {
   BarChart2,
   ListTodo,
   Headset,
-  Check
+  Check,
+  Lock
 } from 'lucide-react';
 import StatisticsDashboard from './components/StatisticsDashboard';
 
@@ -32,6 +33,10 @@ const problemTypes = [
 
 function App() {
   const [activeTab, setActiveTab] = useState('historique');
+  const [isStatsAuthenticated, setIsStatsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+
   const [interventions, setInterventions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +48,17 @@ function App() {
   const [typeProbleme, setTypeProbleme] = useState([]);
   const [descriptionProbleme, setDescriptionProbleme] = useState('');
   const [solution, setSolution] = useState('');
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (passwordInput === '!*A1Z2E3R4T5!') {
+      setIsStatsAuthenticated(true);
+      setPasswordError(false);
+      setPasswordInput('');
+    } else {
+      setPasswordError(true);
+    }
+  };
 
   useEffect(() => {
     fetchInterventions();
@@ -419,6 +435,44 @@ function App() {
             </div>
           </div>
         </div>
+        ) : !isStatsAuthenticated ? (
+          <div className="animate-in fade-in duration-300 flex items-center justify-center min-h-[500px]">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full">
+              <div className="text-center mb-6">
+                <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                  <Lock className="w-8 h-8 text-gray-400" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">Accès restreint</h2>
+                <p className="text-sm text-gray-500 mt-2">Veuillez saisir le mot de passe pour accéder aux statistiques.</p>
+              </div>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div>
+                  <input
+                    type="password"
+                    value={passwordInput}
+                    onChange={(e) => {
+                      setPasswordInput(e.target.value);
+                      setPasswordError(false);
+                    }}
+                    className={`block w-full p-3 border rounded-xl focus:ring-2 focus:ring-ca-teal sm:text-sm transition-shadow outline-none ${
+                      passwordError ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-ca-teal'
+                    }`}
+                    placeholder="Mot de passe"
+                    autoFocus
+                  />
+                  {passwordError && (
+                    <p className="text-sm text-red-500 mt-2">Mot de passe incorrect.</p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-ca-teal hover:bg-ca-tealDark text-white font-medium rounded-xl transition-colors"
+                >
+                  Accéder aux statistiques
+                </button>
+              </form>
+            </div>
+          </div>
         ) : (
           <div className="animate-in fade-in duration-300">
             <StatisticsDashboard />
